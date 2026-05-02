@@ -45,6 +45,7 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isSOSOpen, setIsSOSOpen] = useState(false);
 
@@ -55,26 +56,33 @@ export default function App() {
         fetchProfile(user.uid);
       } else {
         setProfile(null);
+        setLoadingProfile(false);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Automatic redirect after login/signup (only from auth screen to avoid blocking landing page access)
+  // Automatic redirect after login/signup
   useEffect(() => {
-    if (session && profile && currentScreen === 'auth') {
-      const pendingRide = sessionStorage.getItem('pending_ride_id');
-      if (pendingRide) {
-        setCurrentScreen('ride-search');
-      } else {
-        const dashboard = profile.role === 'driver' ? 'driver-dashboard' : 'passenger-dashboard';
-        setCurrentScreen(dashboard as Screen);
+    if (session && currentScreen === 'auth') {
+      // Wait for profile to load (or fail)
+      if (!loadingProfile) {
+        const pendingRide = sessionStorage.getItem('pending_ride_id');
+        if (pendingRide) {
+          setCurrentScreen('ride-search');
+        } else {
+          // If no profile yet, maybe it's a new account still indexing or failed creation
+          // Default to passenger-dashboard as a fallback
+          const dashboard = profile?.role === 'driver' ? 'driver-dashboard' : 'passenger-dashboard';
+          setCurrentScreen(dashboard as Screen);
+        }
       }
     }
-  }, [session, profile, currentScreen]);
+  }, [session, profile, currentScreen, loadingProfile]);
 
   const fetchProfile = async (userId: string) => {
+    setLoadingProfile(true);
     try {
       const docRef = doc(db, 'profiles', userId);
       const docSnap = await getDoc(docRef);
@@ -83,6 +91,8 @@ export default function App() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+    } finally {
+      setLoadingProfile(false);
     }
   };
 

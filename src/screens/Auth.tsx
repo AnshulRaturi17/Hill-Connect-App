@@ -83,6 +83,14 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
   const [error, setError] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
 
+  // If user is already authenticated, notify parent
+  React.useEffect(() => {
+    const user = auth.currentUser;
+    if (user && !loading) {
+      onAuthSuccess();
+    }
+  }, []);
+
   const handleGoogleAuth = async () => {
     setLoading(true);
     setError(null);
@@ -189,6 +197,8 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
     }
   };
 
+  const isAlreadyLoggedIn = auth.currentUser;
+
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Decor */}
@@ -214,172 +224,200 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
         </button>
 
         <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-emerald-900/5 border border-outline-variant/30 relative">
-          <div className="mb-8">
-            <h2 className="text-2xl font-serif font-black text-emerald-950 capitalize">
-              {isLogin ? 'Welcome Back' : 'Join the Climb'}
-            </h2>
-            <p className="text-xs font-bold text-on-surface-variant mt-2">
-              {isLogin ? 'Access your high-altitude dashboard' : 'Create an account to start carpooling'}
-            </p>
-          </div>
-
-          {/* Google Auth removed as per user request to use manual verification flow */}
-
-
-          <form onSubmit={handleAuth} className="space-y-5">
-            {!isLogin && (
-              <div className="space-y-4 mb-6">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40">Select Your Role</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <RoleButton 
-                    active={role === 'passenger'} 
-                    onClick={() => setRole('passenger')} 
-                    icon={<Users size={18} />} 
-                    label="Passenger" 
-                  />
-                  <RoleButton 
-                    active={role === 'driver'} 
-                    onClick={() => setRole('driver')} 
-                    icon={<CarFront size={18} />} 
-                    label="Driver" 
-                  />
-                </div>
+          {isAlreadyLoggedIn ? (
+            <div className="text-center py-6">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-900">
+                <ShieldCheck size={40} />
               </div>
-            )}
+              <h2 className="text-2xl font-serif font-black text-emerald-950 mb-2">You're Already Signed In</h2>
+              <p className="text-sm font-bold text-on-surface-variant mb-10">We've detected an active session. Welcome back!</p>
+              
+              <div className="space-y-4">
+                <button 
+                  onClick={() => onAuthSuccess()}
+                  className="w-full py-5 bg-emerald-950 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-emerald-900/20 hover:brightness-125 transition-all flex items-center justify-center gap-3 active:scale-95"
+                >
+                  Go to Dashboard
+                  <ArrowRight size={18} />
+                </button>
+                <button 
+                  onClick={async () => {
+                    await auth.signOut();
+                    window.location.reload();
+                  }}
+                  className="w-full py-5 bg-surface text-emerald-950 border-2 border-emerald-950/10 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm hover:bg-emerald-50 transition-all active:scale-95"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <h2 className="text-2xl font-serif font-black text-emerald-950 capitalize">
+                  {isLogin ? 'Welcome Back' : 'Join the Climb'}
+                </h2>
+                <p className="text-xs font-bold text-on-surface-variant mt-2">
+                  {isLogin ? 'Access your high-altitude dashboard' : 'Create an account to start carpooling'}
+                </p>
+              </div>
 
-            {!isLogin && (
-              <>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                    <ShieldCheck size={20} />
+              <form onSubmit={handleAuth} className="space-y-5">
+                {!isLogin && (
+                  <div className="space-y-4 mb-6">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40">Select Your Role</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <RoleButton 
+                        active={role === 'passenger'} 
+                        onClick={() => setRole('passenger')} 
+                        icon={<Users size={18} />} 
+                        label="Passenger" 
+                      />
+                      <RoleButton 
+                        active={role === 'driver'} 
+                        onClick={() => setRole('driver')} 
+                        icon={<CarFront size={18} />} 
+                        label="Driver" 
+                      />
+                    </div>
                   </div>
-                  <input 
-                    type="text"
-                    placeholder="Full Name"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-                  />
-                </div>
+                )}
 
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                    <Users size={20} />
-                  </div>
-                  <input 
-                    type="text"
-                    placeholder="Username"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-                  />
-                </div>
+                {!isLogin && (
+                  <>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
+                        <ShieldCheck size={20} />
+                      </div>
+                      <input 
+                        type="text"
+                        placeholder="Full Name"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
+                      />
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
+                        <Users size={20} />
+                      </div>
+                      <input 
+                        type="text"
+                        placeholder="Username"
+                        required
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
+                      />
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
+                        <Mail size={20} />
+                      </div>
+                      <input 
+                        type="tel"
+                        placeholder="Phone Number"
+                        required
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
+                      />
+                    </div>
+
+                    {role === 'driver' && (
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
+                          <CarFront size={20} />
+                        </div>
+                        <input 
+                          type="text"
+                          placeholder="Vehicle Details (Model, Plate)"
+                          required
+                          value={vehicleDetails}
+                          onChange={(e) => setVehicleDetails(e.target.value)}
+                          className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <div className="relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
                     <Mail size={20} />
                   </div>
                   <input 
-                    type="tel"
-                    placeholder="Phone Number"
+                    type="email"
+                    placeholder="Email Address"
                     required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
                   />
                 </div>
 
-                {role === 'driver' && (
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                      <CarFront size={20} />
-                    </div>
-                    <input 
-                      type="text"
-                      placeholder="Vehicle Details (Model, Plate)"
-                      required
-                      value={vehicleDetails}
-                      onChange={(e) => setVehicleDetails(e.target.value)}
-                      className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-                    />
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
+                    <Lock size={20} />
                   </div>
+                  <input 
+                    type="password"
+                    placeholder="Password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
+                  />
+                </div>
+
+                {verificationSent && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[13px] font-bold text-emerald-600 bg-emerald-50 py-3 px-[10px] rounded-xl border border-emerald-100"
+                  >
+                    Verification email sent! Please check your inbox.
+                  </motion.p>
                 )}
-              </>
-            )}
 
-            <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                <Mail size={20} />
+                {error && (
+                  <motion.p 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-[13px] font-bold text-red-600 bg-red-50 py-3 px-[10px] rounded-xl border border-red-100"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+
+                <button 
+                  disabled={loading}
+                  className="w-full py-5 bg-emerald-950 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-emerald-900/20 hover:brightness-125 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <>
+                      {isLogin ? 'Sign In' : 'Create Account'}
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-10 text-center pb-2">
+                <button 
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-xs font-black uppercase tracking-widest text-on-surface-variant hover:text-emerald-950 transition-colors"
+                >
+                  {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
+                </button>
               </div>
-              <input 
-                type="email"
-                placeholder="Email Address"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-              />
-            </div>
-
-            <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                <Lock size={20} />
-              </div>
-              <input 
-                type="password"
-                placeholder="Password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-              />
-            </div>
-
-            {verificationSent && (
-              <motion.p 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[13px] font-bold text-emerald-600 bg-emerald-50 py-3 px-[10px] rounded-xl border border-emerald-100"
-              >
-                Verification email sent! Please check your inbox.
-              </motion.p>
-            )}
-
-            {error && (
-              <motion.p 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-[13px] font-bold text-red-600 bg-red-50 py-3 px-[10px] rounded-xl border border-red-100"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <button 
-              disabled={loading}
-              className="w-full py-5 bg-emerald-950 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-emerald-900/20 hover:brightness-125 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="animate-spin" size={18} />
-              ) : (
-                <>
-                  {isLogin ? 'Sign In' : 'Create Account'}
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-10 text-center pb-2">
-            <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-xs font-black uppercase tracking-widest text-on-surface-variant hover:text-emerald-950 transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
-            </button>
-          </div>
+            </>
+          )}
         </div>
 
         <button 
