@@ -60,24 +60,7 @@ export default function App() {
           if (docSnap.exists()) {
             setProfile(docSnap.data());
           } else {
-            // Profile is missing! This can happen if signup was interrupted. Let's create a minimal profile.
-            try {
-              const { setDoc, serverTimestamp } = await import('firebase/firestore');
-              await setDoc(doc(db, 'profiles', user.uid), {
-                full_name: user.displayName || 'Hiker',
-                username: user.email?.split('@')[0] || 'user',
-                email: user.email,
-                role: 'passenger', // fallback role
-                rating: 5.0,
-                trips_completed: 0,
-                avatar_url: user.photoURL || null,
-                created_at: serverTimestamp()
-              });
-              // The snapshot will auto-trigger once the document is written!
-            } catch (err) {
-              console.error("Failed to recover missing profile", err);
-              setProfile(null);
-            }
+            setProfile(null);
           }
           setLoadingProfile(false);
         }, (error) => {
@@ -104,17 +87,18 @@ export default function App() {
   // Automatic redirect after login/signup
   useEffect(() => {
     if (session && currentScreen === 'auth') {
-      // Wait for profile to load (or fail)
+      // Wait for profile to load
       if (!loadingProfile) {
-        const pendingRide = sessionStorage.getItem('pending_ride_id');
-        if (pendingRide) {
-          setCurrentScreen('ride-search');
-        } else {
-          // If no profile yet, maybe it's a new account still indexing or failed creation
-          // Default to passenger-dashboard as a fallback
-          const dashboard = profile?.role === 'driver' ? 'driver-dashboard' : 'passenger-dashboard';
-          setCurrentScreen(dashboard as Screen);
+        if (profile) {
+          const pendingRide = sessionStorage.getItem('pending_ride_id');
+          if (pendingRide) {
+            setCurrentScreen('ride-search');
+          } else {
+            const dashboard = profile.role === 'driver' ? 'driver-dashboard' : 'passenger-dashboard';
+            setCurrentScreen(dashboard as Screen);
+          }
         }
+        // If profile is null, we stay on auth screen waiting for signup to finish creating the profile document
       }
     }
   }, [session, profile, currentScreen, loadingProfile]);
