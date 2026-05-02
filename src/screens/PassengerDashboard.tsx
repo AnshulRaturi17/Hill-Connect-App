@@ -76,7 +76,9 @@ export default function PassengerDashboard({ onNavigate }: { onNavigate: (screen
             }
             setMyBookings(bookings);
           }, (error) => {
-            handleFirestoreError(error, OperationType.LIST, 'bookings');
+            if (auth.currentUser) {
+              handleFirestoreError(error, OperationType.LIST, 'bookings');
+            }
           });
         }
 

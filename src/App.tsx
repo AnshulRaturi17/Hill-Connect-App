@@ -26,7 +26,7 @@ import {
 import { Screen } from './types';
 import { auth, db } from './lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 // Importing screens
 import Landing from './screens/Landing';
@@ -50,17 +50,55 @@ export default function App() {
   const [isSOSOpen, setIsSOSOpen] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let unsubscribeProfile: () => void;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setSession(user);
       if (user) {
-        fetchProfile(user.uid);
+        setLoadingProfile(true);
+        unsubscribeProfile = onSnapshot(doc(db, 'profiles', user.uid), async (docSnap) => {
+          if (docSnap.exists()) {
+            setProfile(docSnap.data());
+          } else {
+            // Profile is missing! This can happen if signup was interrupted. Let's create a minimal profile.
+            try {
+              const { setDoc, serverTimestamp } = await import('firebase/firestore');
+              await setDoc(doc(db, 'profiles', user.uid), {
+                full_name: user.displayName || 'Hiker',
+                username: user.email?.split('@')[0] || 'user',
+                email: user.email,
+                role: 'passenger', // fallback role
+                rating: 5.0,
+                trips_completed: 0,
+                avatar_url: user.photoURL || null,
+                created_at: serverTimestamp()
+              });
+              // The snapshot will auto-trigger once the document is written!
+            } catch (err) {
+              console.error("Failed to recover missing profile", err);
+              setProfile(null);
+            }
+          }
+          setLoadingProfile(false);
+        }, (error) => {
+          console.error("Error fetching profile:", error);
+          setLoadingProfile(false);
+        });
       } else {
         setProfile(null);
         setLoadingProfile(false);
+        if (unsubscribeProfile) {
+          unsubscribeProfile();
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
   // Automatic redirect after login/signup
@@ -80,21 +118,6 @@ export default function App() {
       }
     }
   }, [session, profile, currentScreen, loadingProfile]);
-
-  const fetchProfile = async (userId: string) => {
-    setLoadingProfile(true);
-    try {
-      const docRef = doc(db, 'profiles', userId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setProfile(docSnap.data());
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
 
   const handleLogout = async () => {
     await signOut(auth);

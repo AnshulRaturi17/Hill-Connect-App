@@ -117,8 +117,9 @@ export default function DriverDashboard({ onNavigate }: { onNavigate?: (screen: 
             setBookings(bookingData);
             setLoading(false);
           }, (error) => {
-            // Error handled by onSnapshot callback
-            handleFirestoreError(error, OperationType.LIST, 'bookings');
+            if (auth.currentUser) {
+              handleFirestoreError(error, OperationType.LIST, 'bookings');
+            }
             setLoading(false);
           });
 

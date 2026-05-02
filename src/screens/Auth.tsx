@@ -17,8 +17,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   signInWithPopup,
-  GoogleAuthProvider,
-  sendEmailVerification
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Screen } from '../types';
@@ -75,13 +74,11 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [vehicleDetails, setVehicleDetails] = useState('');
   const [role, setRole] = useState<'passenger' | 'driver'>('passenger');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [verificationSent, setVerificationSent] = useState(false);
 
   // If user is already authenticated, notify parent
   React.useEffect(() => {
@@ -152,16 +149,12 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
         // Update Firebase Auth profile
         await updateProfile(user, { displayName: fullName });
 
-        // Send Email Verification
-        await sendEmailVerification(user);
-        setVerificationSent(true);
-
         // Create Firestore profile
         const profilePath = `profiles/${user.uid}`;
         try {
           await setDoc(doc(db, 'profiles', user.uid), {
             full_name: fullName,
-            username: username,
+            username: email.split('@')[0],
             email: email,
             phone_number: phoneNumber,
             vehicle_details: role === 'driver' ? vehicleDetails : null,
@@ -301,20 +294,6 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
 
                     <div className="relative group">
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
-                        <Users size={20} />
-                      </div>
-                      <input 
-                        type="text"
-                        placeholder="Username"
-                        required
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
-                      />
-                    </div>
-
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-emerald-700 transition-colors">
                         <Mail size={20} />
                       </div>
                       <input 
@@ -372,16 +351,6 @@ export default function Auth({ onAuthSuccess, onNavigate }: { onAuthSuccess: () 
                     className="w-full pl-12 pr-6 py-4 bg-surface rounded-2xl border-2 border-transparent focus:border-emerald-950 focus:bg-white outline-none transition-all font-bold text-base"
                   />
                 </div>
-
-                {verificationSent && (
-                  <motion.p 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-[13px] font-bold text-emerald-600 bg-emerald-50 py-3 px-[10px] rounded-xl border border-emerald-100"
-                  >
-                    Verification email sent! Please check your inbox.
-                  </motion.p>
-                )}
 
                 {error && (
                   <motion.p 

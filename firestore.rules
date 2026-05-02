@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function isEmailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
+      return isSignedIn(); // Email verification disabled
     }
 
     function isOwner(userId) {
@@ -36,11 +36,14 @@ service cloud.firestore {
     function isValidProfile(p) {
       return p.keys().hasAll(['full_name', 'role', 'email', 'username'])
         && p.full_name is string && p.full_name.size() <= 100
-        && p.username is string && p.username.size() <= 30
+        && p.username is string && p.username.size() <= 60
         && p.email is string && p.email.size() <= 100
         && p.role in ['passenger', 'driver']
-        && (p.get('phone_number', '') is string)
-        && (p.get('vehicle_details', '') is string);
+        && (p.rating is number || !('rating' in p))
+        && (p.trips_completed is number || !('trips_completed' in p))
+        && (p.phone_number is string || p.phone_number == null || !('phone_number' in p))
+        && (p.vehicle_details is string || p.vehicle_details == null || !('vehicle_details' in p))
+        && (p.avatar_url is string || p.avatar_url == null || !('avatar_url' in p));
     }
 
     function isValidRide(r) {
