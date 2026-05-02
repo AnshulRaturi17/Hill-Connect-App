@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@theme {
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif", ui-serif, Georgia, serif;
+
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #d0dbed;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e6eeff;
+  --color-surface-container-high: #dee9fc;
+  --color-surface-container-highest: #d9e3f6;
+  --color-on-surface: #121c2a;
+  --color-on-surface-variant: #3f4944;
+  --color-inverse-surface: #27313f;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #6f7973;
+  --color-outline-variant: #bec9c2;
+  --color-surface-tint: #1b6b51;
+  --color-primary: #004532;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #065f46;
+  --color-on-primary-container: #8bd6b7;
+  --color-inverse-primary: #8bd6b6;
+  --color-secondary: #9d4300;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fd761a;
+  --color-on-secondary-container: #5c2400;
+  --color-tertiary: #004061;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #20577c;
+  --color-on-tertiary-container: #9bccf7;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #a6f2d1;
+  --color-primary-fixed-dim: #8bd6b6;
+  --color-on-primary-fixed: #002116;
+  --color-on-primary-fixed-variant: #00513b;
+  --color-secondary-fixed: #ffdbca;
+  --color-secondary-fixed-dim: #ffb690;
+  --color-on-secondary-fixed: #341100;
+  --color-on-secondary-fixed-variant: #783200;
+  --color-tertiary-fixed: #cbe6ff;
+  --color-tertiary-fixed-dim: #9bccf6;
+  --color-on-tertiary-fixed: #001e30;
+  --color-on-tertiary-fixed-variant: #0e4b6f;
+
+  @keyframes bounce-slow {
+    0%, 100% {
+      transform: translateY(-5%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  --animate-bounce-slow: bounce-slow 2s infinite;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700;900&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+body {
+  @apply bg-surface text-on-surface font-sans;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-serif font-bold;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide native date/time icons and make the whole input clickable for the picker */
+input[type="date"],
+input[type="time"] {
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+  z-index: 10;
+}
+
+/* Ensure the text is visible and correctly colored */
+input[type="date"],
+input[type="time"] {
+  color-scheme: light;
+}
+

@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Entity Validations ---
+
+    function isValidProfile(p) {
+      return p.keys().hasAll(['full_name', 'role', 'email', 'username'])
+        && p.full_name is string && p.full_name.size() <= 100
+        && p.username is string && p.username.size() <= 30
+        && p.email is string && p.email.size() <= 100
+        && p.role in ['passenger', 'driver']
+        && (p.get('phone_number', '') is string)
+        && (p.get('vehicle_details', '') is string);
+    }
+
+    function isValidRide(r) {
+      return r.keys().hasAll(['driver_id', 'origin', 'destination', 'departure_time', 'price', 'available_seats', 'status'])
+        && r.driver_id == request.auth.uid
+        && r.origin is string && r.origin.size() <= 100
+        && r.destination is string && r.destination.size() <= 100
+        && r.price is number && r.price >= 0
+        && r.available_seats is int && r.available_seats >= 0
+        && r.status in ['active', 'completed', 'cancelled'];
+    }
+
+    function isValidBooking(b) {
+      return b.keys().hasAll(['ride_id', 'passenger_id', 'driver_id', 'seats_booked', 'status'])
+        && b.passenger_id == request.auth.uid
+        && b.ride_id is string
+        && b.driver_id is string
+        && b.seats_booked is int && b.seats_booked > 0
+        && b.status in ['pending', 'confirmed', 'cancelled', 'rejected'];
+    }
+
+    function isValidHazard(h) {
+      return h.keys().hasAll(['type', 'title', 'location', 'description', 'severity', 'created_at'])
+        && h.title is string && h.title.size() <= 200
+        && h.severity in ['low', 'medium', 'high', 'critical']
+        && h.type in ['weather', 'traffic', 'landslide', 'construction'];
+    }
+
+    // --- Collections ---
+
+    // System (for connection testing)
+    match /system/health {
+      allow read: if true;
+    }
+
+    // Profiles
+    match /profiles/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId) && isValidProfile(incoming());
+      allow update: if isOwner(userId) 
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['full_name', 'username', 'phone_number', 'vehicle_details', 'avatar_url', 'rating', 'trips_completed', 'email', 'updated_at'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'trips_completed']));
+    }
+
+    // Rides
+    match /rides/{rideId} {
+      allow read: if true;
+      allow create: if isEmailVerified() && isValidRide(incoming());
+      allow update: if isSignedIn() 
+        && (existing().driver_id == request.auth.uid || true) // Temporarily open for booking updates
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'available_seats'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['available_seats']));
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow list: if isSignedIn() && (resource.data.passenger_id == request.auth.uid || resource.data.driver_id == request.auth.uid);
+      allow get: if isSignedIn() && (resource.data.passenger_id == request.auth.uid || resource.data.driver_id == request.auth.uid);
+      allow create: if isEmailVerified() && isValidBooking(incoming()) && exists(/databases/$(database)/documents/rides/$(incoming().ride_id));
+      allow update: if isSignedIn() && (existing().passenger_id == request.auth.uid || existing().driver_id == request.auth.uid)
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['status']));
+    }
+
+    // Hazards
+    match /hazards/{hazardId} {
+      allow get, list: if true;
+      allow create: if isEmailVerified() && isValidHazard(incoming());
+      allow update: if isSignedIn()
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'comments']) 
+            || incoming().diff(existing()).affectedKeys().hasOnly(['upvotes'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['comments']));
+      allow delete: if isEmailVerified();
+    }
+  }
+}

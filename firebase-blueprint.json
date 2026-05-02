@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile for drivers and passengers",
+      "type": "object",
+      "properties": {
+        "full_name": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "phone_number": { "type": "string" },
+        "vehicle_details": { "type": "string" },
+        "role": { "type": "string", "enum": ["passenger", "driver"] },
+        "rating": { "type": "number" },
+        "trips_completed": { "type": "integer" },
+        "avatar_url": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["full_name", "email", "role"]
+    },
+    "Ride": {
+      "title": "Ride",
+      "description": "Ride offer created by a driver",
+      "type": "object",
+      "properties": {
+        "driver_id": { "type": "string" },
+        "origin": { "type": "string" },
+        "destination": { "type": "string" },
+        "departure_time": { "type": "string", "format": "date-time" },
+        "price": { "type": "number" },
+        "available_seats": { "type": "integer" },
+        "status": { "type": "string", "enum": ["active", "full", "completed", "cancelled"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["driver_id", "origin", "destination", "departure_time", "price", "available_seats"]
+    },
+    "Hazard": {
+      "title": "Hazard",
+      "description": "Road hazard reported by a user",
+      "type": "object",
+      "properties": {
+        "reporter_id": { "type": "string" },
+        "type": { "type": "string", "enum": ["landslide", "weather", "blockage", "warning"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "urgency": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reporter_id", "type", "title", "location"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Booking for a ride by a passenger",
+      "type": "object",
+      "properties": {
+        "ride_id": { "type": "string" },
+        "passenger_id": { "type": "string" },
+        "driver_id": { "type": "string" },
+        "seats_booked": { "type": "integer" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ride_id", "passenger_id", "driver_id", "seats_booked"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": "Profile",
+      "description": "User profiles"
+    },
+    "/rides/{rideId}": {
+      "schema": "Ride",
+      "description": "Ride offers"
+    },
+    "/hazards/{hazardId}": {
+      "schema": "Hazard",
+      "description": "Reported hazards"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Ride bookings"
+    }
+  }
+}
