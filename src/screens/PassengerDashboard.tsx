@@ -15,7 +15,8 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Timer
+  Timer,
+  Phone
 } from 'lucide-react';
 import { Screen, Driver, Hazard } from '../types';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -188,9 +189,15 @@ export default function PassengerDashboard({ onNavigate }: { onNavigate: (screen
                       {booking.status}
                     </span>
                   </div>
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase truncate">
+                  <p className="text-[10px] font-bold text-on-surface-variant uppercase truncate mb-1">
                     {booking.ride?.origin} → {booking.ride?.destination}
                   </p>
+                  {booking.status === 'confirmed' && booking.driver?.phone_number && (
+                    <a href={`tel:${booking.driver.phone_number}`} className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
+                       <Phone size={10} />
+                       {booking.driver.phone_number}
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

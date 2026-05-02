@@ -102,7 +102,8 @@ export default function DriverDashboard({ onNavigate }: { onNavigate?: (screen: 
                   status: b.status,
                   passenger: {
                     full_name: passengerData.full_name,
-                    avatar_url: passengerData.avatar_url
+                    avatar_url: passengerData.avatar_url,
+                    phone_number: passengerData.phone_number
                   },
                   ride: {
                     id: b.ride_id,
