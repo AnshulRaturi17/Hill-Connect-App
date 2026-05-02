@@ -172,7 +172,7 @@ export default function DriverDashboard({ onNavigate }: { onNavigate?: (screen: 
         <div className="flex items-center gap-6">
           <div className="relative">
             <img 
-              src={profile?.avatar_url || `https://i.pravatar.cc/150?u=${profile?.id}`} 
+              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Driver')}&background=064e3b&color=fff`} 
               alt="Profile" 
               className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] object-cover border-4 border-emerald-50 shadow-xl" 
             />
@@ -391,7 +391,7 @@ const RequestItem: React.FC<{
       <div className="flex-1 w-full space-y-4">
          <div className="flex items-center gap-4">
             <div className="relative">
-              <img src={`https://i.pravatar.cc/100?u=${name}`} alt={name} className="w-12 h-12 rounded-2xl object-cover" />
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Passenger')}&background=064e3b&color=fff`} alt={name} className="w-12 h-12 rounded-2xl object-cover" />
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full" />
             </div>
             <div>

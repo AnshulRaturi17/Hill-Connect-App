@@ -123,7 +123,7 @@ export default function RideSearch({ onNavigate }: { onNavigate: (screen: Screen
           route: `${ride.origin} → ${ride.destination}`,
           price: ride.price,
           seats: ride.available_seats,
-          image: profile?.avatar_url || `https://i.pravatar.cc/150?u=${ride.driver_id}`,
+          image: profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Driver')}&background=064e3b&color=fff`,
           isVerified: true,
           driverId: ride.driver_id
         } as any);

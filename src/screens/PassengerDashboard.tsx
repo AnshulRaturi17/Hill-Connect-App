@@ -113,7 +113,7 @@ export default function PassengerDashboard({ onNavigate }: { onNavigate: (screen
               route: 'Local Routes',
               price: 250,
               seats: 4,
-              image: d.avatar_url || `https://i.pravatar.cc/150?u=${dDoc.id}`,
+              image: d.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.full_name || 'Driver')}&background=064e3b&color=fff`,
               isVerified: true
             };
           });
@@ -170,7 +170,7 @@ export default function PassengerDashboard({ onNavigate }: { onNavigate: (screen
             {myBookings.map(booking => (
               <div key={booking.id} className="bg-white p-5 rounded-3xl border border-outline-variant/30 shadow-sm flex items-center gap-4">
                 <img 
-                  src={booking.driver?.avatar_url || `https://i.pravatar.cc/100?u=${booking.driver_id}`} 
+                  src={booking.driver?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.driver?.full_name || 'Driver')}&background=064e3b&color=fff`} 
                   alt="Driver" 
                   className="w-12 h-12 rounded-2xl object-cover shadow-sm"
                 />
